@@ -257,7 +257,7 @@ public class LineChartRenderer extends LineRadarRenderer {
 
         trans.pathValueToPixel(cubicPath);
 
-            mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
+        mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
 
         mRenderPaint.setPathEffect(null);
     }
@@ -295,7 +295,7 @@ public class LineChartRenderer extends LineRadarRenderer {
 
         int entryCount = dataSet.getEntryCount();
 
-        final boolean isDrawSteppedEnabled = dataSet.isDrawSteppedEnabled();
+        final boolean isDrawSteppedEnabled = dataSet.getMode() == LineDataSet.Mode.STEPPED;
         final int pointsPerEntryPair = isDrawSteppedEnabled ? 4 : 2;
 
         Transformer trans = mChart.getTransformer(dataSet.getAxisDependency());
@@ -854,3 +854,4 @@ public class LineChartRenderer extends LineRadarRenderer {
         }
     }
 }
+
