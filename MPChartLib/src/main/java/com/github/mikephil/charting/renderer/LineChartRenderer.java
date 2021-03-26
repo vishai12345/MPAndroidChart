@@ -98,13 +98,19 @@ public class LineChartRenderer extends LineRadarRenderer {
         for (ILineDataSet set : lineData.getDataSets()) {
 
             if (set.isVisible())
-                drawDataSet(c, set);
+                drawDataSet(c, set, true);
+        }
+
+        for (ILineDataSet set : lineData.getDataSets()) {
+
+            if (set.isVisible())
+                drawDataSet(c, set, false);
         }
 
         c.drawBitmap(drawBitmap, 0, 0, mRenderPaint);
     }
 
-    protected void drawDataSet(Canvas c, ILineDataSet dataSet) {
+    protected void drawDataSet(Canvas c, ILineDataSet dataSet, Boolean fill) {
 
         if (dataSet.getEntryCount() < 1)
             return;
@@ -116,22 +122,22 @@ public class LineChartRenderer extends LineRadarRenderer {
             default:
             case LINEAR:
             case STEPPED:
-                drawLinear(c, dataSet);
+                drawLinear(c, dataSet, fill);
                 break;
 
             case CUBIC_BEZIER:
-                drawCubicBezier(dataSet);
+                drawCubicBezier(dataSet, fill);
                 break;
 
             case HORIZONTAL_BEZIER:
-                drawHorizontalBezier(dataSet);
+                drawHorizontalBezier(dataSet, fill);
                 break;
         }
 
         mRenderPaint.setPathEffect(null);
     }
 
-    protected void drawHorizontalBezier(ILineDataSet dataSet) {
+    protected void drawHorizontalBezier(ILineDataSet dataSet, Boolean fill) {
 
         float phaseY = mAnimator.getPhaseY();
 
@@ -164,27 +170,29 @@ public class LineChartRenderer extends LineRadarRenderer {
             }
         }
 
-        // if filled is enabled, close the path
-        if (dataSet.isDrawFilledEnabled()) {
+        if(fill) {
+            // if filled is enabled, close the path
+            if (dataSet.isDrawFilledEnabled()) {
 
-            cubicFillPath.reset();
-            cubicFillPath.addPath(cubicPath);
-            // create a new path, this is bad for performance
-            drawCubicFill(mBitmapCanvas, dataSet, cubicFillPath, trans, mXBounds);
+                cubicFillPath.reset();
+                cubicFillPath.addPath(cubicPath);
+                // create a new path, this is bad for performance
+                drawCubicFill(mBitmapCanvas, dataSet, cubicFillPath, trans, mXBounds);
+            }
+        } else {
+            mRenderPaint.setColor(dataSet.getColor());
+
+            mRenderPaint.setStyle(Paint.Style.STROKE);
+
+            trans.pathValueToPixel(cubicPath);
+
+            mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
+
+            mRenderPaint.setPathEffect(null);
         }
-
-        mRenderPaint.setColor(dataSet.getColor());
-
-        mRenderPaint.setStyle(Paint.Style.STROKE);
-
-        trans.pathValueToPixel(cubicPath);
-
-        mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
-
-        mRenderPaint.setPathEffect(null);
     }
 
-    protected void drawCubicBezier(ILineDataSet dataSet) {
+    protected void drawCubicBezier(ILineDataSet dataSet, Boolean fill) {
 
         float phaseY = mAnimator.getPhaseY();
 
@@ -242,24 +250,26 @@ public class LineChartRenderer extends LineRadarRenderer {
             }
         }
 
-        // if filled is enabled, close the path
-        if (dataSet.isDrawFilledEnabled()) {
+        if(fill) {
+            // if filled is enabled, close the path
+            if (dataSet.isDrawFilledEnabled()) {
 
-            cubicFillPath.reset();
-            cubicFillPath.addPath(cubicPath);
+                cubicFillPath.reset();
+                cubicFillPath.addPath(cubicPath);
 
-            drawCubicFill(mBitmapCanvas, dataSet, cubicFillPath, trans, mXBounds);
+                drawCubicFill(mBitmapCanvas, dataSet, cubicFillPath, trans, mXBounds);
+            }
+        } else {
+            mRenderPaint.setColor(dataSet.getColor());
+
+            mRenderPaint.setStyle(Paint.Style.STROKE);
+
+            trans.pathValueToPixel(cubicPath);
+
+            mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
+
+            mRenderPaint.setPathEffect(null);
         }
-
-        mRenderPaint.setColor(dataSet.getColor());
-
-        mRenderPaint.setStyle(Paint.Style.STROKE);
-
-        trans.pathValueToPixel(cubicPath);
-
-        mBitmapCanvas.drawPath(cubicPath, mRenderPaint);
-
-        mRenderPaint.setPathEffect(null);
     }
 
     protected void drawCubicFill(Canvas c, ILineDataSet dataSet, Path spline, Transformer trans, XBounds bounds) {
@@ -287,11 +297,11 @@ public class LineChartRenderer extends LineRadarRenderer {
 
     /**
      * Draws a normal line.
-     *
-     * @param c
+     *  @param c
      * @param dataSet
+     * @param fill
      */
-    protected void drawLinear(Canvas c, ILineDataSet dataSet) {
+    protected void drawLinear(Canvas c, ILineDataSet dataSet, Boolean fill) {
 
         int entryCount = dataSet.getEntryCount();
 
@@ -315,9 +325,12 @@ public class LineChartRenderer extends LineRadarRenderer {
 
         mXBounds.set(mChart, dataSet);
 
-        // if drawing filled is enabled
-        if (dataSet.isDrawFilledEnabled() && entryCount > 0) {
-            drawLinearFill(c, dataSet, trans, mXBounds);
+        if (fill) {
+            // if drawing filled is enabled
+            if (dataSet.isDrawFilledEnabled() && entryCount > 0) {
+                drawLinearFill(c, dataSet, trans, mXBounds);
+            }
+            return;
         }
 
         // more than 1 color
