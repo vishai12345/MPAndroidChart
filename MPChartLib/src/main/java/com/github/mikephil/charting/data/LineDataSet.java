@@ -403,6 +403,7 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
             mFillFormatter = formatter;
     }
 
+
     @Override
     public IFillFormatter getFillFormatter() {
         return mFillFormatter;
@@ -412,6 +413,7 @@ public class LineDataSet extends LineRadarDataSet<Entry> implements ILineDataSet
         LINEAR,
         STEPPED,
         CUBIC_BEZIER,
-        HORIZONTAL_BEZIER
+        HORIZONTAL_BEZIER,
+        GRADIENT_CUBIC_BEZIER
     }
 }

@@ -32,7 +32,6 @@ public abstract class BaseDataSet<T extends Entry> implements IDataSet<T> {
     protected GradientColor mGradientColor = null;
 
     protected List<GradientColor> mGradientColors = null;
-
     /**
      * List representing all colors that are used for drawing the actual values for this DataSet
      */
@@ -523,6 +522,26 @@ public abstract class BaseDataSet<T extends Entry> implements IDataSet<T> {
         }
 
         return false;
+    }
+
+    public void setLineGradientColor(int startColor, int endColor) {
+        mGradientColor = new GradientColor(startColor, endColor);
+    }
+
+
+    @Override
+    public GradientColor getLineGradientColor() {
+        return mGradientColor;
+    }
+
+    @Override
+    public List<GradientColor> getLineGradientColors() {
+        return mGradientColors;
+    }
+
+    @Override
+    public GradientColor getLineGradientColor(int index) {
+        return mGradientColors.get(index % mGradientColors.size());
     }
 
     protected void copy(BaseDataSet baseDataSet) {
