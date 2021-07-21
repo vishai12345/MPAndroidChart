@@ -16,6 +16,7 @@ public class BarData extends BarLineScatterCandleBubbleData<IBarDataSet> {
      * the width of the bars on the x-axis, in values (not pixels)
      */
     private float mBarWidth = 0.85f;
+    private float mBarCornerRadius = 0;
 
     public BarData() {
         super();
@@ -41,6 +42,14 @@ public class BarData extends BarLineScatterCandleBubbleData<IBarDataSet> {
 
     public float getBarWidth() {
         return mBarWidth;
+    }
+
+    public void setBarCornerRadius(float mBarCornerRadius) {
+        this.mBarCornerRadius = mBarCornerRadius;
+    }
+
+    public float getBarCornerRadius() {
+        return mBarCornerRadius;
     }
 
     /**

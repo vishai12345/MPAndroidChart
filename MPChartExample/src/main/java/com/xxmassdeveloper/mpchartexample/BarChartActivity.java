@@ -103,7 +103,6 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
         leftAxis.setValueFormatter(custom);
         leftAxis.setPosition(YAxisLabelPosition.OUTSIDE_CHART);
         leftAxis.setSpaceTop(15f);
-        leftAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
 
         YAxis rightAxis = chart.getAxisRight();
         rightAxis.setDrawGridLines(false);
@@ -111,7 +110,6 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
         rightAxis.setLabelCount(8, false);
         rightAxis.setValueFormatter(custom);
         rightAxis.setSpaceTop(15f);
-        rightAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
 
         Legend l = chart.getLegend();
         l.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
@@ -141,7 +139,7 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
         ArrayList<BarEntry> values = new ArrayList<>();
 
         for (int i = (int) start; i < start + count; i++) {
-            float val = (float) (Math.random() * (range + 1));
+            float val = (float) (Math.random() * (range + 1) - (range / 2));
 
             if (Math.random() * 100 < 25) {
                 values.add(new BarEntry(i, val, getResources().getDrawable(R.drawable.star)));
@@ -188,7 +186,7 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
             gradientColors.add(new GradientColor(startColor4, endColor4));
             gradientColors.add(new GradientColor(startColor5, endColor5));
 
-            set1.setGradientColors(gradientColors);
+            // set1.setGradientColors(gradientColors);
 
             ArrayList<IBarDataSet> dataSets = new ArrayList<>();
             dataSets.add(set1);
@@ -197,6 +195,7 @@ public class BarChartActivity extends DemoBase implements OnSeekBarChangeListene
             data.setValueTextSize(10f);
             data.setValueTypeface(tfLight);
             data.setBarWidth(0.9f);
+            data.setBarCornerRadius(10);
 
             chart.setData(data);
         }
