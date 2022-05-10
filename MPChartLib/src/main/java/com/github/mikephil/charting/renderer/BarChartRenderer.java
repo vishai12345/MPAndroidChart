@@ -206,8 +206,9 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
     }
 
     protected void fillBar(Canvas c, BarBuffer buffer, IBarDataSet dataSet, int j) {
+        int currentBarIndex = Math.min(j/4, dataSet.getEntryCount() - 1);
         fillBarForPaint(c, dataSet, new RectF(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
-                buffer.buffer[j + 3]), j/4, mRenderPaint);
+                buffer.buffer[j + 3]), currentBarIndex , mRenderPaint);
     }
 
     protected void fillBar(Canvas c, IBarDataSet dataSet, int j) {
