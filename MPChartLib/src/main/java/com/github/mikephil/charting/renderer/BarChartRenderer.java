@@ -1,9 +1,9 @@
-
 package com.github.mikephil.charting.renderer;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 
@@ -11,6 +11,7 @@ import com.github.mikephil.charting.animation.ChartAnimator;
 import com.github.mikephil.charting.buffer.BarBuffer;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarEntry;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.highlight.Range;
 import com.github.mikephil.charting.interfaces.dataprovider.BarDataProvider;
@@ -19,6 +20,10 @@ import com.github.mikephil.charting.utils.MPPointF;
 import com.github.mikephil.charting.utils.Transformer;
 import com.github.mikephil.charting.utils.Utils;
 import com.github.mikephil.charting.utils.ViewPortHandler;
+import android.graphics.LinearGradient;
+import android.util.Log;
+
+import com.github.mikephil.charting.model.GradientColor;
 
 import java.util.List;
 
@@ -163,14 +168,65 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
                 mRenderPaint.setColor(dataSet.getColor(j / 4));
             }
 
-            c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
-                    buffer.buffer[j + 3], mRenderPaint);
+            if (dataSet.getGradientColor() != null) {
+                GradientColor gradientColor = dataSet.getGradientColor();
+                 mRenderPaint.setShader(
+                    new LinearGradient(
+                        buffer.buffer[j],
+                        buffer.buffer[j + 3],
+                        buffer.buffer[j],
+                        buffer.buffer[j + 1],
+                        gradientColor.getStartColor(),
+                        gradientColor.getEndColor(),
+                        android.graphics.Shader.TileMode.MIRROR));
+            }
+
+            if (dataSet.getGradientColors() != null) {
+                 mRenderPaint.setShader(
+                    new LinearGradient(
+                        buffer.buffer[j],
+                        buffer.buffer[j + 3],
+                        buffer.buffer[j],
+                        buffer.buffer[j + 1],
+                        dataSet.getGradientColor(j / 4).getStartColor(),
+                        dataSet.getGradientColor(j / 4).getEndColor(),
+                        android.graphics.Shader.TileMode.MIRROR));
+            }
+
+
+//            c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+//                    buffer.buffer[j + 3], mRenderPaint);
+            fillBar(c, buffer, dataSet, j);
 
             if (drawBorder) {
                 c.drawRect(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
                         buffer.buffer[j + 3], mBarBorderPaint);
             }
         }
+    }
+
+    protected void fillBar(Canvas c, BarBuffer buffer, IBarDataSet dataSet, int j) {
+        int currentBarIndex = Math.min(j/4, dataSet.getEntryCount() - 1);
+        fillBarForPaint(c, dataSet, new RectF(buffer.buffer[j], buffer.buffer[j + 1], buffer.buffer[j + 2],
+                buffer.buffer[j + 3]), currentBarIndex , mRenderPaint);
+    }
+
+    protected void fillBar(Canvas c, IBarDataSet dataSet, int j) {
+        fillBarForPaint(c, dataSet, mBarRect, j, mHighlightPaint);
+    }
+
+    protected void fillBarForPaint(Canvas c, IBarDataSet dataSet, RectF rect, int index, Paint paint) {
+        BarData barData = mChart.getBarData();
+        float barCornerRadius = barData.getBarCornerRadius();
+        if (barCornerRadius < 0) barCornerRadius = rect.width() / 2;
+
+        Path p = new Path();
+        float yValue = dataSet.getEntryForIndex(index).getY();
+        if (yValue >= 0)
+            p.addRoundRect(rect, new float[]{barCornerRadius, barCornerRadius, barCornerRadius, barCornerRadius, 0, 0, 0, 0}, Path.Direction.CW);
+        else
+            p.addRoundRect(rect, new float[]{0, 0, 0, 0, barCornerRadius, barCornerRadius, barCornerRadius, barCornerRadius}, Path.Direction.CW);
+        c.drawPath(p, paint);
     }
 
     protected void prepareBarHighlight(float x, float y1, float y2, float barWidthHalf, Transformer trans) {
@@ -226,6 +282,8 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
 
                 final float phaseY = mAnimator.getPhaseY();
 
+                ValueFormatter formatter = dataSet.getValueFormatter();
+
                 MPPointF iconsOffset = MPPointF.getInstance(dataSet.getIconsOffset());
                 iconsOffset.x = Utils.convertDpToPixel(iconsOffset.x);
                 iconsOffset.y = Utils.convertDpToPixel(iconsOffset.y);
@@ -248,8 +306,7 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
                         float val = entry.getY();
 
                         if (dataSet.isDrawValuesEnabled()) {
-                            drawValue(c, dataSet.getValueFormatter(), val, entry, i, x,
-                                    val >= 0 ?
+                            drawValue(c, formatter.getBarLabel(entry), x, val >= 0 ?
                                             (buffer.buffer[j + 1] + posOffset) :
                                             (buffer.buffer[j + 3] + negOffset),
                                     dataSet.getValueTextColor(j / 4));
@@ -307,8 +364,7 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
                                 continue;
 
                             if (dataSet.isDrawValuesEnabled()) {
-                                drawValue(c, dataSet.getValueFormatter(), entry.getY(), entry, i, x,
-                                        buffer.buffer[bufferIndex + 1] +
+                                drawValue(c, formatter.getBarLabel(entry), x, buffer.buffer[bufferIndex + 1] +
                                                 (entry.getY() >= 0 ? posOffset : negOffset),
                                         color);
                             }
@@ -379,14 +435,7 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
                                     continue;
 
                                 if (dataSet.isDrawValuesEnabled()) {
-                                    drawValue(c,
-                                            dataSet.getValueFormatter(),
-                                            vals[k / 2],
-                                            entry,
-                                            i,
-                                            x,
-                                            y,
-                                            color);
+                                    drawValue(c, formatter.getBarStackedLabel(val, entry), x, y, color);
                                 }
 
                                 if (entry.getIcon() != null && dataSet.isDrawIconsEnabled()) {
@@ -415,6 +464,12 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
     }
 
     @Override
+    public void drawValue(Canvas c, String valueText, float x, float y, int color) {
+        mValuePaint.setColor(color);
+        c.drawText(valueText, x, y, mValuePaint);
+    }
+
+    @Override
     public void drawHighlighted(Canvas c, Highlight[] indices) {
 
         BarData barData = mChart.getBarData();
@@ -433,8 +488,10 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
 
             Transformer trans = mChart.getTransformer(set.getAxisDependency());
 
+            mHighlightPaint.setStyle(Paint.Style.STROKE);
             mHighlightPaint.setColor(set.getHighLightColor());
             mHighlightPaint.setAlpha(set.getHighLightAlpha());
+            mHighlightPaint.setStrokeWidth(5);
 
             boolean isStack = (high.getStackIndex() >= 0  && e.isStacked()) ? true : false;
 
@@ -465,7 +522,7 @@ public class BarChartRenderer extends BarLineScatterCandleBubbleRenderer {
 
             setHighlightDrawPos(high, mBarRect);
 
-            c.drawRect(mBarRect, mHighlightPaint);
+            fillBar(c, set, set.getEntryIndex(e));
         }
     }
 
